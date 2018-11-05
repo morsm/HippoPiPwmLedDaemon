@@ -34,7 +34,7 @@ namespace Termors.Serivces.HippoPiPwmLedDaemon
             return obj;
         }
 
-        [Route("set.json"), HttpPost]
+        [Route("rgb.json"), HttpPost]
         public void SetStatus(LampDataObject obj)
         {
             // TODO: partial response, not on/off and r,g,b always set simultaneously

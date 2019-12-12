@@ -1,32 +1,38 @@
-﻿[
-  {
-    "Name": "TvLampLeft",
-    "Port": 9030,
-    "RedChannel": 0
-  },
-  {
-    "Name": "TvLampMiddle",
-    "Port": 9031,
-    "RedChannel": 3
-  },
-  {
-    "Name": "TvLampRight",
-    "Port": 9032,
-    "RedChannel": 6
-  },
-  {
-    "Name": "StripLightLeft",
-    "Port": 9033,
-    "RedChannel": 9
-  },
-  {
-    "Name": "StripLightTop",
-    "Port": 9034,
-    "RedChannel": 12
-  },
-  {
-    "Name": "StripLightRight",
-    "Port": 9035,
-    "RedChannel": 15
-  }
-]
+﻿{
+  "BaseCommand": "ssh",
+  "BaseArgs": "pi@wallflowerpi /home/pi/tlc5947spi/tlc5947spi",
+  "Verbose":  false,
+  "Lamps":
+  [
+    {
+      "Name": "TvLampLeft",
+      "Port": 9030,
+      "RedChannel": 0
+    },
+    {
+      "Name": "TvLampMiddle",
+      "Port": 9031,
+      "RedChannel": 3
+    },
+    {
+      "Name": "TvLampRight",
+      "Port": 9032,
+      "RedChannel": 6
+    },
+    {
+      "Name": "StripLightLeft",
+      "Port": 9033,
+      "RedChannel": 9
+    },
+    {
+      "Name": "StripLightTop",
+      "Port": 9034,
+      "RedChannel": 12
+    },
+    {
+      "Name": "StripLightRight",
+      "Port": 9035,
+      "RedChannel": 15
+    }
+  ]
+}

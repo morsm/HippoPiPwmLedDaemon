@@ -8,31 +8,34 @@ using Makaretu.Dns;
 using Microsoft.Owin.Hosting;
 using Owin;
 
-namespace Termors.Serivces.HippoPiPwmLedDaemon
+namespace Termors.Services.HippoPiPwmLedDaemon
 {
+    public delegate Task LampSwitchedDelegate(LightService service, bool on);
+
     public class LightService : IDisposable
     {
         private readonly ushort _port;
-        private readonly string _name;
-        private readonly int _redChannel;
         private IDisposable _webapp = null;
-        private byte _red = 0, _green = 0, _blue = 0;
         private bool _on;
+        private readonly byte _redChannel;
 
-        public LightService(string name, ushort port, int redChannel)
+        public LightService(string name, ushort port, byte redChannel)
         {
-            _name = name;
+            Name = name;
             _port = port;
             _redChannel = redChannel;
         }
 
+        public event LampSwitchedDelegate LampSwitched;
         public static readonly IDictionary<ushort, LightService> Registry = new Dictionary<ushort, LightService>();
+
+        protected static readonly ServiceDiscovery Discovery = new ServiceDiscovery();
 
         public void RegisterMDNS()
         {
-            var service = new ServiceProfile("HippoLed-" + _name, "_hippohttp._tcp", _port);
-            var sd = new ServiceDiscovery();
-            sd.Advertise(service);
+            var service = new ServiceProfile("HippoLed-" + Name, "_hippohttp._tcp", _port);
+
+            Discovery.Advertise(service);
         }
 
         public void StartWebserver()
@@ -45,19 +48,20 @@ namespace Termors.Serivces.HippoPiPwmLedDaemon
 
         public async Task SetRGB(byte red, byte green, byte blue)
         {
-            _red = red;
-            _green = green;
-            _blue = blue;
+            Red = red;
+            Green = green;
+            Blue = blue;
 
-            await InternalSetPWM(red, green, blue);
+            await InternalSetPWM();
         }
 
-        protected async Task InternalSetPWM(byte red, byte green, byte blue)
+        protected async Task InternalSetPWM()
         {
             // Write to PWM registers on Raspberry Pi
-            PwmService.Instance[_redChannel] = _red;
-            PwmService.Instance[_redChannel + 1] = _green;
-            PwmService.Instance[_redChannel + 2] = _blue;
+            // RGB values are written if the lamp is on, otherwise zeros.
+            PwmService.Instance[_redChannel] = On ? Red : (byte) 0;
+            PwmService.Instance[_redChannel + 1] = On ? Green : (byte) 0;
+            PwmService.Instance[_redChannel + 2] = On ? Blue : (byte) 0;
 
             await PwmService.Instance.WritePwmData();
         }
@@ -74,23 +78,27 @@ namespace Termors.Serivces.HippoPiPwmLedDaemon
                 if (oldStatus != value)
                 {
                     _on = value;
-                    if (_on) InternalSetPWM(_red, _green, _blue).Wait();
-                    else InternalSetPWM(0, 0, 0).Wait();
+                    InternalSetPWM().Wait();
                 }
             }
         }
 
         public byte Red
         {
-            get { return _red; }
+            get; protected set;
         }
         public byte Green
         {
-            get { return _green; }
+            get; protected set;
         }
         public byte Blue
         {
-            get { return _blue; }
+            get; protected set;
+        }
+
+        public string Name
+        {
+            get; set;
         }
 
 

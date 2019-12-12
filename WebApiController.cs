@@ -2,23 +2,18 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Web.Http;
+using System.Text;
 
-using Owin;
 
-namespace Termors.Serivces.HippoPiPwmLedDaemon
+namespace Termors.Services.HippoPiPwmLedDaemon
 {
-    public class LampDataObject
-    {
-        public bool burn { get; set; }
-        public byte red { get; set; }
-        public byte green { get; set; }
-        public byte blue { get; set; }
-    }
-
 
     public class WebApiController : ApiController
     {
+        public static readonly string API_VERSION = "3.3.0";
+
         [Route("status.json"), HttpGet]
         public LampDataObject GetStatus()
         {
@@ -34,6 +29,13 @@ namespace Termors.Serivces.HippoPiPwmLedDaemon
             return obj;
         }
 
+        [Route("version.json"), HttpGet]
+        public VersionDataObject GetVersion()
+        {
+            return new VersionDataObject { version = API_VERSION };
+        }
+
+
         [Route("rgb.json"), HttpPost]
         public void SetStatus(LampDataObject obj)
         {
@@ -44,6 +46,60 @@ namespace Termors.Serivces.HippoPiPwmLedDaemon
             svc.On = obj.burn;
             svc.SetRGB(obj.red, obj.green, obj.blue).Wait();
         }
+
+        [Route("config.json"), HttpGet]
+        public ConfigDataObject GetConfig()
+        {
+            ConfigDataObject cfg = new ConfigDataObject
+            {
+                name = CurrentService.Name,
+                Behavior = LampBehavior.START_OFF,
+                TypeOfLamp = LampType.LampColorRGB
+            };
+
+            return cfg;
+        }
+
+        [Route("config.json"), HttpPost]
+        public void SetConfig()
+        {
+            // Do nothing. Nothing to set
+        }
+
+        // Simple on/off commands
+        [Route("on.html"), HttpGet]
+        public HttpResponseMessage On()
+        {
+            CurrentService.On = true;
+
+            return HtmlStatusResponse();
+        }
+        [Route("off.html"), HttpGet]
+        public HttpResponseMessage Off()
+        {
+            CurrentService.On = false;
+
+            return HtmlStatusResponse();
+        }
+
+        protected HttpResponseMessage HtmlStatusResponse()
+        {
+            var response = new HttpResponseMessage();
+
+            StringBuilder sb = new StringBuilder("<html><head><title>Lamp status</title></head><body>Lamp is ");
+            if (CurrentService.On) sb.Append("ON"); else sb.Append("OFF");
+            sb.Append("<br/>");
+
+            sb.AppendFormat("Red = {0}<br/>", CurrentService.Red);
+            sb.AppendFormat("Green = {0}<br/>", CurrentService.Green);
+            sb.AppendFormat("Blue = {0}<br/>", CurrentService.Blue);
+            sb.Append("</body></html>");
+
+            response.Content = new StringContent(sb.ToString());
+            response.Content.Headers.ContentType = new MediaTypeHeaderValue("text/html");
+            return response;
+        }
+
 
         protected ushort RequestPort
         {

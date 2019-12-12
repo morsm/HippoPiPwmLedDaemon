@@ -4,20 +4,22 @@ using System.Threading;
 
 using Newtonsoft.Json;
 
-namespace Termors.Serivces.HippoPiPwmLedDaemon
+namespace Termors.Services.HippoPiPwmLedDaemon
 {
     class MainClass
     {
         public static void Main(string[] args)
         {
-            // Debug data?
-            DebugData.ProcessCommandline(args);
-
             var config = ReadConfig();
-            SetupServices(config);
+            PwmService.BaseCommand = config.BaseCommand;
+            PwmService.BaseArgs = config.BaseArgs;
+            PwmService.Verbose = config.Verbose;
 
             // Initial PWM setup (all lamps off)
             PwmService.Instance.WritePwmData().Wait();
+
+            // Start web services
+            SetupServices(config.Lamps);
 
             // Run until Ctrl+C
             var endEvent = new ManualResetEvent(false);
@@ -35,12 +37,12 @@ namespace Termors.Serivces.HippoPiPwmLedDaemon
             endEvent.WaitOne();
         }
 
-        public static ConfigObject[] ReadConfig()
+        public static Configuration ReadConfig()
         {
             using (StreamReader rea = new StreamReader("pipwmled.json"))
             {
                 string json = rea.ReadToEnd();
-                return JsonConvert.DeserializeObject<ConfigObject[]>(json);
+                return JsonConvert.DeserializeObject<Configuration>(json);
             }
         }
 

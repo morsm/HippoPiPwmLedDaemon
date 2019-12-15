@@ -28,6 +28,7 @@ namespace Termors.Services.HippoPiPwmLedDaemon
         public static string BaseCommand { get; set; }
         public static string BaseArgs { get; set; }
         public static bool Verbose { get; set; }
+        public static bool Invert { get; set; }
 
         public byte this[int index]
         {
@@ -59,6 +60,7 @@ namespace Termors.Services.HippoPiPwmLedDaemon
             {
                 // Create 12-bit number
                 int twelveBitValue = ((int)_registers[i]) * 16;
+                if (Invert) twelveBitValue = 4095 - twelveBitValue;
 
                 sb.Append(" ").Append(twelveBitValue);
             }

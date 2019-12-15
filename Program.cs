@@ -16,6 +16,7 @@ namespace Termors.Services.HippoPiPwmLedDaemon
             PwmService.Verbose = config.Verbose;
 
             // Initial PWM setup (all lamps off)
+            PwmService.Invert = true;
             PwmService.Instance.WritePwmData().Wait();
 
             // Start web services
